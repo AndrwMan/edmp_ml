@@ -4,6 +4,8 @@ import os
 import zipfile
 from pydub.exceptions import CouldntDecodeError
 import shutil
+import numpy as np
+import soundfile as sf
 
 def get_audio_codec(file_path):
     try:
@@ -40,15 +42,27 @@ def reduce_noise(input_zip_path, output_folder):
                 
                 try:
                     # Load the audio file (extract audio from video)
-                    audio = AudioSegment.from_file(input_file_path, format="aac")
+                    audio = AudioSegment.from_file(input_file_path, format="mp4", codec="aac")
                     #audio = AudioSegment.from_mp3(input_file_path)
                 except CouldntDecodeError:
                     print(f"Error decoding {filename}. Skipping.")
                     continue
-
+                
+				# Convert audio to numpy array
+                y = np.array(audio.get_array_of_samples())
+                sr = audio.frame_rate
+                        
                 # Perform noise reduction
-                reduced_audio = nr.reduce_noise(audio)
+                reduced_audio_array = nr.reduce_noise(y, sr)
 
+				# Convert the numpy array back to AudioSegment
+                #reduced_audio = AudioSegment.from_numpy_array(reduced_audio_array.astype(np.int16), sr)
+                temp_wav_file = os.path.join(temp_dir, "temp_reduced.wav")
+                sf.write(temp_wav_file, reduced_audio_array, sr)
+
+                # Load the temporary WAV file using pydub
+                reduced_audio = AudioSegment.from_file(temp_wav_file, format="wav")
+                
                 # Save the reduced audio to the output folder
                 output_file_path = os.path.join(output_folder, f"{os.path.splitext(filename)[0]}_reduced.wav")
                 reduced_audio.export(output_file_path, format="wav")
