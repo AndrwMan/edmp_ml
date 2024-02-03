@@ -21,12 +21,12 @@ def reduce_noise(input_zip_path, output_folder):
 
     # Open the zip file
     with zipfile.ZipFile(input_zip_path, 'r') as zip_ref:
-        # Extract all files to a temporary directory inside the output folder
+        # Extract all files to a temporary directory inside samples folder
         temp_dir = os.path.join("samples", "temp_extracted_files")
         os.makedirs(temp_dir, exist_ok=True)
         zip_ref.extractall(temp_dir)
 
-        # Process each audio file in the temporary directory
+        # Process each audio file in the temp directory
         for filename in os.listdir(temp_dir):
             if filename.endswith(".mp3"):
                 input_file_path = os.path.join(temp_dir, filename)
@@ -41,9 +41,9 @@ def reduce_noise(input_zip_path, output_folder):
                 print(f"Codec: {codec}")
                 
                 try:
-                    # Load the audio file (extract audio from video)
+                    # Load the audio file (extract audio, but this method assumes video w/ audio)
+                    #also weirdly mp4 works even though the audio is actually mp3
                     audio = AudioSegment.from_file(input_file_path, format="mp4", codec="aac")
-                    #audio = AudioSegment.from_mp3(input_file_path)
                 except CouldntDecodeError:
                     print(f"Error decoding {filename}. Skipping.")
                     continue
